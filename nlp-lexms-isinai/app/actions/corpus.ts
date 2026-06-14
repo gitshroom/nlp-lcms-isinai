@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { pool, CORPUS_TYPE, type CorpusType } from "@/lib/db";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 
 export type CreateCorpusResult = {
@@ -40,7 +40,7 @@ export async function createCorpus(formData: FormData): Promise<CreateCorpusResu
   const description = String(formData.get("description") ?? "").trim();
   const uploadedFile = formData.get("file") as File | null;
 
-  // ── Validation ───────────────────────────────────────────
+  // ── Validation (no side effects yet) ────────────────────
   if (!title) return { success: false, error: "Title is required." };
   if (title.length > MAX_SHORT || author.length > MAX_SHORT) {
     return { success: false, error: "Text fields must be 255 characters or fewer." };
@@ -61,11 +61,12 @@ export async function createCorpus(formData: FormData): Promise<CreateCorpusResu
     publication_year = parsed;
   }
 
-  // ── File handling ────────────────────────────────────────
-  let file_path: string | null = null;
   let filename: string | null = null;
+  let file_path: string | null = null;
+  let hasFile = false;
 
   if (uploadedFile && uploadedFile.size > 0) {
+    hasFile = true;
     if (uploadedFile.size > MAX_FILE_SIZE) {
       return { success: false, error: "File must be 50 MB or smaller." };
     }
@@ -73,21 +74,17 @@ export async function createCorpus(formData: FormData): Promise<CreateCorpusResu
       return { success: false, error: "File type not allowed." };
     }
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "corpus");
-    await mkdir(uploadDir, { recursive: true });
-
-    // Prefix with timestamp to avoid collisions
     const safeName = uploadedFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const uniqueName = `${Date.now()}_${safeName}`;
-    const fullPath = path.join(uploadDir, uniqueName);
-
-    const buffer = Buffer.from(await uploadedFile.arrayBuffer());
-    await writeFile(fullPath, buffer);
-
     filename = uploadedFile.name;
     file_path = `/uploads/corpus/${uniqueName}`;
   }
 
+  // ── Database insert first ────────────────────────────────
+  // The file is written to disk only after this succeeds, and is
+  // removed again if the subsequent write fails — so a failed
+  // request never leaves behind an orphaned row or an orphaned file.
+  let corpusId: number;
   try {
     const result = await pool.query<{ corpus_id: number }>(
       `INSERT INTO corpus
@@ -104,13 +101,79 @@ export async function createCorpus(formData: FormData): Promise<CreateCorpusResu
         file_path,
       ]
     );
-
-    revalidatePath("/admin/dashboard");
-    revalidatePath("/admin/data-entry");
-
-    return { success: true, corpusId: result.rows[0].corpus_id };
+    corpusId = result.rows[0].corpus_id;
   } catch (err) {
-    console.error("createCorpus failed:", err);
+    console.error("createCorpus insert failed:", err);
     return { success: false, error: "Could not save this corpus source. Please try again." };
   }
+
+  // ── File write second ────────────────────────────────────
+  if (hasFile && uploadedFile && file_path) {
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "corpus");
+    const fullPath = path.join(process.cwd(), "public", file_path);
+
+    try {
+      await mkdir(uploadDir, { recursive: true });
+      const buffer = Buffer.from(await uploadedFile.arrayBuffer());
+      await writeFile(fullPath, buffer);
+    } catch (err) {
+      console.error("createCorpus file write failed:", err);
+      // Roll back the row we just inserted so the DB doesn't reference
+      // a file that doesn't exist on disk.
+      await pool.query(`DELETE FROM corpus WHERE corpus_id = $1`, [corpusId]).catch((rollbackErr) => {
+        console.error("createCorpus rollback failed:", rollbackErr);
+      });
+      return { success: false, error: "Could not save the uploaded file. Please try again." };
+    }
+  }
+
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/data-entry");
+
+  return { success: true, corpusId };
+}
+
+// helper retained for cleanup callers if needed elsewhere
+export async function deleteCorpusFile(filePath: string): Promise<void> {
+  const fullPath = path.join(process.cwd(), "public", filePath);
+  await unlink(fullPath).catch(() => {
+    // file may already be gone — nothing to do
+  });
+}
+
+// ── Read helpers for the corpus preview panel ──────────────────
+
+export type CorpusDetail = {
+  corpus_id: number;
+  title: string;
+  filetype: CorpusType;
+  filename: string | null;
+  file_path: string | null;
+  author: string | null;
+  publication_year: number | null;
+  description: string | null;
+};
+
+export async function listAllCorpus(): Promise<CorpusDetail[]> {
+  const result = await pool.query<CorpusDetail>(
+    `SELECT corpus_id, title, filetype, filename, file_path, author, publication_year, description
+     FROM corpus
+     ORDER BY title ASC`
+  );
+  return result.rows;
+}
+
+export async function getCorpusById(corpusId: number): Promise<CorpusDetail | null> {
+  if (!Number.isInteger(corpusId) || corpusId <= 0) {
+    return null;
+  }
+
+  const result = await pool.query<CorpusDetail>(
+    `SELECT corpus_id, title, filetype, filename, file_path, author, publication_year, description
+     FROM corpus
+     WHERE corpus_id = $1`,
+    [corpusId]
+  );
+
+  return result.rows[0] ?? null;
 }
