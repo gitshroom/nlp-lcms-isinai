@@ -1,0 +1,248 @@
+.header {
+  margin-bottom: 40px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sage-deep);
+  margin-bottom: 10px;
+}
+
+.title {
+  font-family: var(--font-fraunces), serif;
+  font-weight: 600;
+  font-size: 32px;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  color: var(--ink-soft);
+  font-size: 15px;
+  margin-top: 8px;
+  max-width: 560px;
+}
+
+/* ===== Stat cards ===== */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-bottom: 48px;
+}
+
+.statCard {
+  background: var(--paper);
+  padding: 24px 22px;
+}
+
+.statLabel {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+
+.statValue {
+  font-family: var(--font-fraunces), serif;
+  font-weight: 600;
+  font-size: 36px;
+  line-height: 1;
+}
+
+.statMeta {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--rust);
+  margin-top: 8px;
+}
+
+/* ===== Sections ===== */
+.sectionGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.panel {
+  background: var(--paper-deep);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 24px;
+}
+
+.panelHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 18px;
+}
+
+.panelTitle {
+  font-family: var(--font-fraunces), serif;
+  font-weight: 600;
+  font-size: 19px;
+}
+
+.panelTag {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* POS breakdown bars */
+.posRow {
+  display: grid;
+  grid-template-columns: 110px 1fr 48px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.posLabel {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.posBarTrack {
+  height: 6px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.posBarFill {
+  height: 100%;
+  background: var(--rust);
+}
+
+.posCount {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+/* Recent entries table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th {
+  text-align: left;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.table td {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.wordCell {
+  font-family: var(--font-fraunces), serif;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.posTag {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 3px 8px;
+  color: var(--sage-deep);
+  white-space: nowrap;
+}
+
+.statusBadge {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.statusVerified {
+  color: var(--sage-deep);
+  border: 1px solid var(--sage);
+  background: transparent;
+}
+
+.statusPending {
+  color: var(--rust-deep);
+  border: 1px solid var(--rust);
+  background: transparent;
+}
+
+.dateCell {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+/* Corpus / verifier mini list */
+.miniList {
+  display: flex;
+  flex-direction: column;
+}
+
+.miniRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.miniRow:last-child {
+  border-bottom: none;
+}
+
+.miniLabel {
+  font-size: 14px;
+}
+
+.miniValue {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 1024px) {
+  .statGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sectionGrid {
+    grid-template-columns: 1fr;
+  }
+}

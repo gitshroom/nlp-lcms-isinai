@@ -1,0 +1,25 @@
+:root {
+  --paper: #f7f3ec;
+  --paper-deep: #f0eae0;
+  --ink: #1d1b16;
+  --ink-soft: #5a5648;
+  --line: #d8d2c5;
+  --rust: #b5512c;
+  --rust-deep: #8c3c1f;
+  --sage: #6e7f66;
+  --sage-deep: #4e5c47;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+}
